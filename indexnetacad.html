@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Networking Basics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .progress {
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .question-container {
+            margin: 20px 0;
+        }
+        
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            list-style: none;
+        }
+        
+        .option {
+            background: #f5f5f5;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .option:hover {
+            background: #e8e8e8;
+            transform: translateX(5px);
+        }
+        
+        .option.selected {
+            border-color: #667eea;
+            background: #e8eaf6;
+        }
+        
+        .option.correct {
+            background: #c8e6c9;
+            border-color: #4caf50;
+        }
+        
+        .option.incorrect {
+            background: #ffcdd2;
+            border-color: #f44336;
+        }
+        
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .feedback {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .feedback.show {
+            display: block;
+        }
+        
+        .feedback.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .feedback.incorrect {
+            background: #ffcdd2;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+        
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff9c4;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-next {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-next:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-next:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .final-score {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .final-score h2 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        
+        .final-score p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        
+        .restart-btn {
+            background: #4caf50;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .restart-btn:hover {
+            background: #45a049;
+        }
+        
+        .question-number {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Networking Basics Quiz</h1>
+        <div class="score">Wynik: <span id="score">0</span>/<span id="total">64</span></div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div id="quizContainer"></div>
+    </div>
+
+    <script>
+        const quizDataOriginal = [
+            {
+                question: "Which statement describes the use of powerline networking technology?",
+                options: [
+                    "A device connects to an existing home LAN using an adapter and an existing electrical outlet.",
+                    "New \"smart\" electrical cabling is used to extend an existing home LAN.",
+                    "Wireless access points use powerline adapters to distribute data through the home LAN.",
+                    "A home LAN is installed without the use of physical cabling."
+                ],
+                correct: 0,
+                explanation: "Powerline networking adds the ability to connect a device to the network using an adapter wherever there is an electrical outlet. The network uses existing electrical wiring to send data."
+            },
+            {
+                question: "Which wireless RF band do IEEE 802.11b/g devices use?",
+                options: ["60 GHz", "2.4 GHz", "900 MHz", "5 GHz"],
+                correct: 1,
+                explanation: "802.11b/g/n devices all operate at 2.4 GHz."
+            },
+            {
+                question: "Which term correctly identifies the device type that is included in the area B (routers and switches)?",
+                options: ["end", "transfer", "source", "intermediary"],
+                correct: 3,
+                explanation: "Routers and switches are intermediary devices. End devices consist of PCs, laptops, and servers."
+            },
+            {
+                question: "What is a disadvantage of deploying a peer-to-peer network model?",
+                options: [
+                    "lack of centralized administration",
+                    "high cost",
+                    "difficulty of setup",
+                    "high degree of complexity"
+                ],
+                correct: 0,
+                explanation: "The primary disadvantages of a peer-to-peer network are its lack of central administration, minimal security, and its lack of scalability."
+            },
+            {
+                question: "Which three steps must be completed to manually connect an Android or IOS device to a secured wireless network? (Choose three)",
+                options: [
+                    "Change the MAC address",
+                    "Set the IP address",
+                    "Enter the network SSID",
+                    "Activate the Bluetooth antenna",
+                    "Input the authentication password",
+                    "Choose the correct security type"
+                ],
+                correct: [2, 4, 5],
+                multiple: true,
+                explanation: "To connect manually: Enter the network SSID, Choose the security type, Input the password."
+            },
+            {
+                question: "What are three characteristics of a peer-to-peer network? (Choose three)",
+                options: [
+                    "better security",
+                    "scalable",
+                    "easy to create",
+                    "better device performance when acting as both client and server",
+                    "less cost to implement",
+                    "lacks centralized administration"
+                ],
+                correct: [2, 4, 5],
+                multiple: true,
+                explanation: "Peer-to-peer networks are easy to create, less complex, have lower costs, and have no centralized administration."
+            },
+            {
+                question: "Which type of device provides an Internet connection through the use of a phone jack?",
+                options: ["satellite modem", "Wi-Fi AP", "DSL modem", "cable modem"],
+                correct: 2,
+                explanation: "DSL technology uses the existing telephone network. For that reason, a DSL modem commonly has an RJ-11 phone connector."
+            },
+            {
+                question: "A traveling sales representative uses a cell phone to interact with the home office. Which internet connectivity method would be preferred on the mobile device due to low cost?",
+                options: ["cellular", "Wi-Fi", "DSL", "cable"],
+                correct: 1,
+                explanation: "The Wi-Fi connection is preferred because it uses less battery power and is free in many places."
+            },
+            {
+                question: "A user is configuring a wireless access point and wants to prevent any neighbors from discovering the network. What action does the user need to take?",
+                options: [
+                    "Configure DMZ settings",
+                    "Disable SSID broadcast",
+                    "Configure a DNS server",
+                    "Enable WPA encryption"
+                ],
+                correct: 1,
+                explanation: "Disabling SSID broadcast prevents the access point from announcing the name of the network."
+            },
+            {
+                question: "What can a tourist do to allow the laptop to connect to the internet using smartphone's 3G/4G?",
+                options: [
+                    "Enable tethering and create a hotspot",
+                    "Use the smartphone to access web pages and then pass the web pages to the laptop",
+                    "Use the smartphone to access the internet through a satellite connection",
+                    "Use an Ethernet cable to connect the smartphone to the laptop"
+                ],
+                correct: 0,
+                explanation: "When a cellular phone allows Wi-Fi devices to connect and use the mobile data network, this is called a hotspot."
+            },
+            {
+                question: "What layer is responsible for routing messages through an internetwork in the TCP/IP model?",
+                options: ["network access", "session", "transport", "internet"],
+                correct: 3,
+                explanation: "Of the four TCP/IP layers, it is the internet layer that is responsible for routing messages."
+            },
+            {
+                question: "What will a Cisco LAN switch do if it receives an incoming frame and the destination MAC address is not listed in the MAC address table?",
+                options: [
+                    "Send the frame to the default gateway address",
+                    "Drop the frame",
+                    "Forward the frame out all ports except the port where the frame is received",
+                    "Use ARP to resolve the port that is related to the frame"
+                ],
+                correct: 2,
+                explanation: "The switch forwards the frame out all ports except for the ingress port of the frame."
+            },
+            {
+                question: "What process involves placing one message format inside of another message format?",
+                options: ["flow control", "encapsulation", "encoding", "segmentation"],
+                correct: 1,
+                explanation: "When a message is placed inside of another message, this is known as encapsulation."
+            },
+            {
+                question: "What is one advantage of using fiber-optic cabling compared to copper cabling?",
+                options: [
+                    "The installation skills required for fiber-optic cabling are lower",
+                    "Fiber-optic cabling can transmit signals without attenuation",
+                    "Fiber-optic cabling is completely immune to EMI and RFI",
+                    "The cost of fiber-optic connectors is lower"
+                ],
+                correct: 2,
+                explanation: "Fiber-optic cabling is immune to RFI and EMI, and can transmit signals with less attenuation."
+            },
+            {
+                question: "What data encoding technology is used in copper cables?",
+                options: [
+                    "electrical pulses",
+                    "modulation of specific frequencies of electromagnetic waves",
+                    "modulation of light rays",
+                    "pulses of light"
+                ],
+                correct: 0,
+                explanation: "Data in copper cables is encoded into electrical impulses."
+            },
+            {
+                question: "What information is added to the switch table from incoming frames?",
+                options: [
+                    "destination IP address and incoming port number",
+                    "source MAC address and incoming port number",
+                    "source IP address and incoming port number",
+                    "destination MAC address and incoming port number"
+                ],
+                correct: 1,
+                explanation: "A switch builds the MAC address table based on the source MAC address and incoming port."
+            },
+            {
+                question: "At which layer of the OSI model would a logical address be added during encapsulation?",
+                options: ["network layer", "physical layer", "transport layer", "data link layer"],
+                correct: 0,
+                explanation: "Logical addresses (IP addresses) are added at the network layer."
+            },
+            {
+                question: "Which type of network model describes the functions that must be completed at a particular layer, but does not specify exactly how each protocol should work?",
+                options: ["reference model", "hierarchical design model", "protocol model", "TCP/IP model"],
+                correct: 0,
+                explanation: "A reference model does not specify exactly how a function should be accomplished. The OSI model is an example."
+            },
+            {
+                question: "Which two criteria are used to help select a network medium for a network? (Choose two)",
+                options: [
+                    "the environment where the selected medium is to be installed",
+                    "the cost of the end devices that are used in the network",
+                    "the number of intermediate devices that are installed in the network",
+                    "the distance the selected medium can successfully carry a signal",
+                    "the types of data that need to be prioritized"
+                ],
+                correct: [0, 3],
+                multiple: true,
+                explanation: "Criteria include: distance the medium can carry a signal, and the environment where it will be installed."
+            },
+            {
+                question: "Which scenario is suitable for deploying twisted-pair cables?",
+                options: [
+                    "to connect network devices in backbone networks",
+                    "to connect a TV set to the wall plug at home",
+                    "to connect data centers with high bandwidth requirements over long distances",
+                    "to connect PC workstations in an office"
+                ],
+                correct: 3,
+                explanation: "Ethernet technology generally uses twisted-pair cables to interconnect office devices."
+            },
+            {
+                question: "How many bits are represented by each group of four hexadecimal values contained between the colons in an IPv6 address?",
+                options: ["16", "64", "4", "32", "8"],
+                correct: 0,
+                explanation: "The four hexadecimal values contained in a hextet represent 16 bits."
+            },
+            {
+                question: "When the lease of a dynamically assigned IPv4 address has expired, what Layer 2 and Layer 3 destination addresses will a workstation use?",
+                options: [
+                    "FF-FF-FF-FF-FF-FF and 255.255.255.255",
+                    "MAC address of the DHCP server and 255.255.255.255",
+                    "FF-FF-FF-FF-FF-FF and IPv4 address of the DHCP server",
+                    "both MAC and IPv4 addresses of the DHCP server"
+                ],
+                correct: 0,
+                explanation: "The workstation sends a DHCPDISCOVER via broadcast with FF-FF-FF-FF-FF-FF and 255.255.255.255."
+            },
+            {
+                question: "What are two characteristics of multicast transmission? (Choose two)",
+                options: [
+                    "The source address of a multicast transmission is in the range of 224.0.0.0 to 224.0.0.255",
+                    "Multicast transmission can be used by routers to exchange routing information",
+                    "A single packet can be sent to a group of hosts",
+                    "Multicast messages map lower layer addresses to upper layer addresses",
+                    "Computers use multicast transmission to request IPv4 addresses"
+                ],
+                correct: [1, 2],
+                multiple: true,
+                explanation: "Multicast is used by routing protocols and sends a single packet to a group of hosts."
+            },
+            {
+                question: "Which three types of nodes should be assigned static IP addresses on a network? (Choose three)",
+                options: [
+                    "desktop PCs",
+                    "printers",
+                    "mobile laptops",
+                    "gateways",
+                    "tablets",
+                    "servers"
+                ],
+                correct: [1, 3, 5],
+                multiple: true,
+                explanation: "Servers, printers, and gateways should have statically assigned IP addresses."
+            },
+            {
+                question: "What benefit does DHCP provide to a network?",
+                options: [
+                    "DHCP allows users to refer to locations by a name rather than an IP address",
+                    "Hosts always have the same IP address and are therefore always reachable",
+                    "Hosts can connect to the network and get an IP address without manual configuration",
+                    "Duplicate addresses cannot occur on a network that uses DHCP"
+                ],
+                correct: 2,
+                explanation: "DHCP provides automatic IP address configuration to hosts on a network."
+            },
+            {
+                question: "Which three addresses are valid public addresses? (Choose three)",
+                options: [
+                    "198.133.219.17",
+                    "128.107.12.117",
+                    "172.31.1.25",
+                    "10.15.250.5",
+                    "64.104.78.227",
+                    "192.168.1.245"
+                ],
+                correct: [0, 1, 4],
+                multiple: true,
+                explanation: "Private ranges are: 10.0.0.0-10.255.255.255, 172.16.0.0-172.31.255.255, 192.168.0.0-192.168.255.255"
+            },
+            {
+                question: "Which number grouping is a valid IPv6 address?",
+                options: [
+                    "1234:1230::1238::1299:1000::",
+                    "1b10::1100::2001::2900::ab11::1102::0000::2900",
+                    "2001:0db8:3c55:0015:1010:0000:abcd:ff13",
+                    "12aa::1298:1200::129b"
+                ],
+                correct: 2,
+                explanation: "A valid IPv6 can only use double colon (::) once, and must have proper hexadecimal format."
+            },
+            {
+                question: "Which IP address does a laptop use as destination when requesting a dynamically assigned address?",
+                options: [
+                    "192.168.0.100",
+                    "255.255.255.255",
+                    "192.168.0.255",
+                    "255.255.255.0",
+                    "192.168.0.1"
+                ],
+                correct: 1,
+                explanation: "DHCP request uses broadcast destination IPv4 address of 255.255.255.255."
+            },
+            {
+                question: "Why does the device return an error for IPv6 address 2001:db8::1111::0200?",
+                options: [
+                    "The IPv6 address notation is incorrect",
+                    "IPv6 is not implemented on this network",
+                    "The device already is configured with an IPv4 address",
+                    "The address is already in use on the network"
+                ],
+                correct: 0,
+                explanation: "The address contains two instances of double colon (::), which is invalid. It can only be used once."
+            },
+            {
+                question: "What type of route is indicated by the code C in an IPv4 routing table on a Cisco router?",
+                options: [
+                    "directly connected route",
+                    "default route",
+                    "dynamic route learned from another router",
+                    "static route"
+                ],
+                correct: 0,
+                explanation: "C stands for directly connected route in routing table codes."
+            },
+            {
+                question: "In which two scenarios does a wireless router perform NAT? (Choose two)",
+                options: [
+                    "when a host is sending packets to the ISP to request a speed increase",
+                    "when a host is sending packets to a local server",
+                    "when a host is sending packets to a remote site to request device manual",
+                    "when a host is sending a print job to a network printer on the LAN",
+                    "when a host is sending HTTP packets to the wireless router"
+                ],
+                correct: [2],
+                explanation: "NAT is performed when translating private (local) to public (global) addresses for remote sites."
+            },
+            {
+                question: "What happens when host A wants to send an IP packet to host D but doesn't have the MAC in ARP table?",
+                options: [
+                    "Host A sends out the packet to the switch which sends it only to host D",
+                    "Host D sends an ARP request to host A",
+                    "Host A sends an ARP request to the MAC address of host D",
+                    "Host A sends out a broadcast of FF:FF:FF:FF:FF:FF"
+                ],
+                correct: 3,
+                explanation: "Host A will send a Layer 2 broadcast (FF:FF:FF:FF:FF:FF) and host D will respond."
+            },
+            {
+                question: "The IP address of which device interface should be used as the default gateway setting of a host?",
+                options: [
+                    "R1: G0/0",
+                    "R2: S0/0/1",
+                    "R1: S0/0/0",
+                    "R2: S0/0/0"
+                ],
+                correct: 0,
+                explanation: "The default gateway is the router interface attached to the LAN where the host resides."
+            },
+            {
+                question: "Which device would you use to best solve broadcast traffic slowing the network?",
+                options: ["switch", "router", "host", "server"],
+                correct: 1,
+                explanation: "A router segments LANs into separate broadcast domains, solving broadcast traffic issues."
+            },
+            {
+                question: "Why might a network technician try to ping the default gateway from the employee laptop?",
+                options: [
+                    "to verify connectivity with the device that provides access to remote networks",
+                    "to verify that an IP address was provided by the DHCP server",
+                    "to determine if the laptop address is included in the DNS server",
+                    "to verify that the SVI interface on the switch is configured correctly"
+                ],
+                correct: 0,
+                explanation: "The default gateway provides access to remote networks, so pinging it verifies that connectivity."
+            },
+            {
+                question: "PC1 issues an ARP request because it needs to send a packet to PC3 on another network. What will happen next?",
+                options: [
+                    "SW1 will send an ARP reply with its Fa0/1 MAC address",
+                    "RT1 will send an ARP reply with its own Fa0/0 MAC address",
+                    "RT1 will send an ARP reply with the PC3 MAC address",
+                    "RT1 will forward the ARP request to PC3",
+                    "RT1 will send an ARP reply with its own Fa0/1 MAC address"
+                ],
+                correct: 1,
+                explanation: "The default gateway (RT1) unicasts an ARP reply with its Fa0/0 MAC address."
+            },
+            {
+                question: "Host H2 sends a unicast message to host H6. Which destination IP address is in the packet header when it reaches H6?",
+                options: [
+                    "the IP address assigned to the network adapter on host H2",
+                    "the IP address assigned to the network adapter on host H6",
+                    "the IP address of the FastEthernet0/1 interface on router R1",
+                    "the IP address of the FastEthernet0/0 interface on router R1"
+                ],
+                correct: 1,
+                explanation: "The destination IP address remains the IP address of H6 throughout the transmission."
+            },
+            {
+                question: "Which command would a technician use to display network connections on a host computer?",
+                options: ["ipconfig", "nslookup", "tracert", "netstat"],
+                correct: 3,
+                explanation: "The netstat command displays active TCP connections on a networked host."
+            },
+            {
+                question: "How are port numbers used in the TCP/IP encapsulation process?",
+                options: [
+                    "Source port and destination port numbers are randomly generated",
+                    "Port numbers are not necessary when UDP is used",
+                    "Source port numbers are used to track separate conversations",
+                    "Destination port numbers are assigned automatically and cannot be changed"
+                ],
+                correct: 2,
+                explanation: "Source port numbers are randomly generated and track different conversations."
+            },
+            {
+                question: "First ping to default gateway failed, second ping to remote host succeeded. What is a possible cause?",
+                options: [
+                    "The default gateway is not operational",
+                    "The TCP/IP stack on the default gateway is not working properly",
+                    "Security rules are applied to the default gateway device",
+                    "The default gateway device is configured with the wrong IP address"
+                ],
+                correct: 2,
+                explanation: "If remote ping works but gateway ping fails, security features may prevent gateway from responding to pings."
+            },
+            {
+                question: "Which CLI command could assist to find the location of a networking problem when local pings work but internet pings fail?",
+                options: ["msconfig", "ipconfig/renew", "tracert", "ipconfig"],
+                correct: 2,
+                explanation: "The tracert utility will locate which link to the server is down."
+            },
+            {
+                question: "Which two TCP header fields are used to confirm receipt of data? (Choose two)",
+                options: [
+                    "FCS",
+                    "acknowledgment number",
+                    "sequence number",
+                    "preamble",
+                    "checksum"
+                ],
+                correct: [1, 2],
+                multiple: true,
+                explanation: "TCP sequence number and acknowledgment number fields are used by the receiver to confirm receipt."
+            },
+            {
+                question: "When analog voice signals are converted for use on a computer network, in what format are they encapsulated?",
+                options: ["IP packets", "segments", "frames", "bits"],
+                correct: 0,
+                explanation: "When VoIP is used, analog voice signals are translated into digital data in the form of IP packets."
+            },
+            {
+                question: "Based on tracert output, where should the administrator begin troubleshooting when only first hop responds?",
+                options: ["SW1", "R1", "SW2", "PC2", "R2"],
+                correct: 1,
+                explanation: "The first successful response is from the default gateway R1, so troubleshooting should start there."
+            },
+            {
+                question: "Ping to www.example.net fails but mapped drives work. What are two potential causes? (Choose two)",
+                options: [
+                    "The Windows domain or workgroup name is incorrect",
+                    "The computer has been assigned a static IP address",
+                    "The target web server is down",
+                    "DNS service is unavailable",
+                    "The HTTP protocol is not working properly"
+                ],
+                correct: [2, 3],
+                multiple: true,
+                explanation: "Ping fails if destination is down or if DNS is unavailable to convert URL to IP."
+            },
+            {
+                question: "Which wireless technology allows a customer to connect to a payment terminal with a smartphone?",
+                options: ["Wi-Fi", "GPS", "NFC", "Bluetooth"],
+                correct: 2,
+                explanation: "NFC (Near Field Communications) is used in contactless payment systems."
+            },
+            {
+                question: "What are two methods typically used on a mobile device to provide internet connectivity? (Choose two)",
+                options: ["Bluetooth", "cellular", "NFC", "GPS", "Wi-Fi"],
+                correct: [1, 4],
+                multiple: true,
+                explanation: "Mobile devices commonly use Wi-Fi and cellular to connect to the internet."
+            },
+            {
+                question: "What information does an Ethernet switch examine and use to build its address table?",
+                options: [
+                    "destination IP address",
+                    "destination MAC address",
+                    "source IP address",
+                    "source MAC address"
+                ],
+                correct: 3,
+                explanation: "An Ethernet switch examines the source MAC address to build its MAC address table."
+            },
+            {
+                question: "Which two OSI model layers have the same functionality as two layers of the TCP/IP model? (Choose two)",
+                options: ["transport", "network", "data link", "session", "physical"],
+                correct: [0, 1],
+                multiple: true,
+                explanation: "OSI transport = TCP/IP transport, and OSI network = TCP/IP internet layer."
+            },
+            {
+                question: "What is the shortest valid representation of the IPv6 address 2001:0DB8:0000:1470:0000:0000:0000:0200?",
+                options: [
+                    "2001:DB8::1470::200",
+                    "2001:0DB8:0:147::02",
+                    "2001:0DB8::1470:0:0:0:2",
+                    "2001:DB8:0:1470::200"
+                ],
+                correct: 3,
+                explanation: "Double colon can only be used once, and leading zeros can be omitted: 2001:DB8:0:1470::200"
+            },
+            {
+                question: "A college uses IP addressing 10.X.4Y.Z where X=campus, 4Y=phones. Which two groupings were used? (Choose two)",
+                options: [
+                    "personnel type",
+                    "device type",
+                    "geographic location",
+                    "department",
+                    "support model"
+                ],
+                correct: [1, 2],
+                multiple: true,
+                explanation: "The design uses geographic location (campus) and device type (phones with 4X designation)."
+            },
+            {
+                question: "If all devices use subnet mask 255.255.255.0, which laptop would have same network number as server with 192.168.3.50?",
+                options: ["B (192.168.1.x)", "A (192.168.2.x)", "C (192.168.3.x)"],
+                correct: 2,
+                explanation: "With mask 255.255.255.0, the first three octets indicate network. Both server and laptop C are 192.168.3.0"
+            },
+            {
+                question: "For what purpose are IPv4 addresses utilized?",
+                options: [
+                    "Burned into the network card to uniquely identify a device",
+                    "Used to identify the number of IP networks available",
+                    "Used to uniquely identify a device on an IP network",
+                    "Used to uniquely identify the application"
+                ],
+                correct: 2,
+                explanation: "An IPv4 address is used to uniquely identify a device on an IP network."
+            },
+            {
+                question: "How is the global address for NAT assigned in a home wireless router?",
+                options: [
+                    "The wireless router acts as a DHCP client to receive global addressing from ISP",
+                    "The default gateway IP address of the LAN device is used",
+                    "The network administrator chooses an available IP address from the LAN",
+                    "The host devices select an unused IP address on the LAN"
+                ],
+                correct: 0,
+                explanation: "The public address is commonly provided via DHCP from the ISP to the router's external interface."
+            },
+            {
+                question: "What destination IP address and port will PC1 use for a DNS query to resolve a web server name?",
+                options: [
+                    "192.168.20.3 port 53",
+                    "192.168.10.1 port 53",
+                    "192.168.20.3 port 80",
+                    "192.168.20.2 port 80",
+                    "192.168.20.2 port 53"
+                ],
+                correct: 4,
+                explanation: "DNS queries use port 53 and are sent to the DNS server address."
+            },
+            {
+                question: "How many bits are in an IPv4 address?",
+                options: ["32", "256", "128", "64"],
+                correct: 0,
+                explanation: "An IPv4 address is 4 octets of 8 bits each, totaling 32 bits."
+            },
+            {
+                question: "When a host sends a packet, how does it determine if the destination is local or remote?",
+                options: [
+                    "It compares the source and destination MAC addresses",
+                    "It queries the DNS server with the destination IP address",
+                    "It checks to see if the default gateway is configured",
+                    "It uses the subnet mask to compare source and destination IP addresses"
+                ],
+                correct: 3,
+                explanation: "The host uses the subnet mask to compare source and destination IP addresses to determine if local or remote."
+            },
+            {
+                question: "PC1 sends ARP request to obtain destination MAC for File_server1. Which MAC address will PC1 receive?",
+                options: [
+                    "the MAC address of the G0/0 interface on R2",
+                    "the MAC address of S2",
+                    "the MAC address of S1",
+                    "the MAC address of File_server1",
+                    "the MAC address of the G0/0 interface on R1"
+                ],
+                correct: 4,
+                explanation: "When communicating with a device on another network, PC1 receives the MAC address of its default gateway (R1 G0/0)."
+            }
+        ];
+
+        let quizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+
+        // Funkcja do mieszania tablicy (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Funkcja do przygotowania pytania z pomieszanymi odpowiedziami
+        function prepareQuestion(question) {
+            const preparedQuestion = { ...question };
+            
+            // Tworzymy tablicę z indeksami
+            const indexMap = question.options.map((opt, idx) => idx);
+            
+            // Mieszamy indeksy
+            const shuffledIndexMap = shuffleArray(indexMap);
+            
+            // Tworzymy nową tablicę odpowiedzi w pomieszanej kolejności
+            preparedQuestion.options = shuffledIndexMap.map(idx => question.options[idx]);
+            
+            // Aktualizujemy poprawne odpowiedzi
+            if (question.multiple) {
+                // Dla pytań wielokrotnego wyboru
+                preparedQuestion.correct = question.correct.map(correctIdx => 
+                    shuffledIndexMap.indexOf(correctIdx)
+                );
+            } else {
+                // Dla pytań jednokrotnego wyboru
+                preparedQuestion.correct = shuffledIndexMap.indexOf(question.correct);
+            }
+            
+            return preparedQuestion;
+        }
+
+        // Inicjalizacja quizu
+        function initQuiz() {
+            // Mieszamy pytania
+            const shuffledQuestions = shuffleArray(quizDataOriginal);
+            
+            // Przygotowujemy każde pytanie (mieszamy odpowiedzi)
+            quizData = shuffledQuestions.map(q => prepareQuestion(q));
+            
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('score').textContent = '0';
+            document.getElementById('total').textContent = quizData.length;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const container = document.getElementById('quizContainer');
+            const question = quizData[currentQuestion];
+            
+            let optionsHTML = '';
+            question.options.forEach((option, index) => {
+                optionsHTML += `
+                    <li class="option" onclick="selectAnswer(${index})">
+                        <input type="${question.multiple ? 'checkbox' : 'radio'}" 
+                               name="answer" 
+                               value="${index}" 
+                               id="option${index}">
+                        <label for="option${index}">${option}</label>
+                    </li>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="question-container">
+                    <div class="question-number">Pytanie ${currentQuestion + 1} z ${quizData.length}</div>
+                    <div class="question">${question.question}</div>
+                    <ul class="options">
+                        ${optionsHTML}
+                    </ul>
+                    <div class="feedback" id="feedback"></div>
+                    <div class="buttons">
+                        <button class="btn-next" onclick="checkAnswer()">Sprawdź odpowiedź</button>
+                    </div>
+                </div>
+            `;
+
+            updateProgress();
+        }
+
+        function selectAnswer(index) {
+            const question = quizData[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            if (question.multiple) {
+                options[index].classList.toggle('selected');
+            } else {
+                options.forEach(opt => opt.classList.remove('selected'));
+                options[index].classList.add('selected');
+            }
+        }
+
+        function checkAnswer() {
+            const question = quizData[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            
+            let selectedAnswers = [];
+            options.forEach((option, index) => {
+                if (option.classList.contains('selected')) {
+                    selectedAnswers.push(index);
+                }
+            });
+
+            if (selectedAnswers.length === 0) {
+                alert('Proszę wybrać odpowiedź!');
+                return;
+            }
+
+            let isCorrect = false;
+            
+            if (question.multiple) {
+                isCorrect = JSON.stringify(selectedAnswers.sort()) === JSON.stringify(question.correct.sort());
+            } else {
+                isCorrect = selectedAnswers[0] === question.correct;
+            }
+
+            options.forEach((option, index) => {
+                option.classList.add('disabled');
+                option.onclick = null;
+                
+                if (question.multiple) {
+                    if (question.correct.includes(index)) {
+                        option.classList.add('correct');
+                    }
+                    if (selectedAnswers.includes(index) && !question.correct.includes(index)) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                    }
+                    if (selectedAnswers.includes(index) && index !== question.correct) {
+                        option.classList.add('incorrect');
+                    }
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                feedback.className = 'feedback show correct';
+                feedback.innerHTML = `
+                    <strong>✓ Poprawna odpowiedź!</strong>
+                    <div class="explanation">${question.explanation}</div>
+                `;
+            } else {
+                feedback.className = 'feedback show incorrect';
+                feedback.innerHTML = `
+                    <strong>✗ Niepoprawna odpowiedź</strong>
+                    <div class="explanation">${question.explanation}</div>
+                `;
+            }
+
+            document.getElementById('score').textContent = score;
+
+            const buttonsDiv = document.querySelector('.buttons');
+            buttonsDiv.innerHTML = `
+                <button class="btn-next" onclick="nextQuestion()">
+                    ${currentQuestion < quizData.length - 1 ? 'Następne pytanie →' : 'Zobacz wynik'}
+                </button>
+            `;
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showFinalScore();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion) / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function showFinalScore() {
+            const percentage = (score / quizData.length * 100).toFixed(1);
+            const container = document.getElementById('quizContainer');
+            
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = 'Doskonały wynik!';
+                emoji = '🏆';
+            } else if (percentage >= 70) {
+                message = 'Bardzo dobry wynik!';
+                emoji = '🎉';
+            } else if (percentage >= 50) {
+                message = 'Dobra robota!';
+                emoji = '👍';
+            } else {
+                message = 'Spróbuj ponownie!';
+                emoji = '📚';
+            }
+
+            container.innerHTML = `
+                <div class="final-score">
+                    <h2>${emoji} ${message}</h2>
+                    <p>Twój wynik: <strong>${score}</strong> na <strong>${quizData.length}</strong></p>
+                    <p>Procent poprawnych odpowiedzi: <strong>${percentage}%</strong></p>
+                    <button class="btn-next restart-btn" onclick="restartQuiz()">
+                        🔄 Rozpocznij quiz od nowa
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        function restartQuiz() {
+            initQuiz();
+        }
+
+        // Start quiz
+        window.onload = function() {
+            initQuiz();
+        };
+    </script>
+</body>
+</html>
